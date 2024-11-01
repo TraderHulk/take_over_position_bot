@@ -76,7 +76,7 @@ taif -f logs/info.log #查看日志，不想查看了就ctrl +c 取消即可
     "messageInfo": {"feishu": "015e67df-04cb-47bc5b46a869a4"} #飞书群里的机器人的id,可以再设置里找到机器人的id，也就是链接后面的id
 }
 ```
-### 6。todo
+### 6、todo
 
 ​	1、支持监控币种设置黑名单列表；
 ​	2、新增客户端，支持windows、mac用户；
