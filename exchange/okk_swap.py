@@ -110,11 +110,11 @@ class OkkSwap(object):
     def set_pingall_order(self, symbol, mgnMode="cross",posSide=None):
         """市场价全平"""
         try:
-            r = self.tradeAPI.close_positions(instId=symbol,
+            self.tradeAPI.close_positions(instId=symbol,
                                               mgnMode=mgnMode,
                                               posSide=posSide,
                                               ccy='')
-            print(r)
+
 
         except Exception as e:
             print("市价全平失败", symbol)
@@ -145,6 +145,33 @@ class OkkSwap(object):
             print(e)
 
         return position_info,symbols
+
+    def updatePosition_coins(self,coins):
+        """获取有仓位的单向持仓的仓位"""
+
+        position_info = {}
+        symbols = [i.upper() + "-USDT-SWAP" for i in coins ]
+        for symbol in symbols:
+            position_dict = {"symbol": "", "position_amt": 0, "entry_price": 0.0, "current_price": 0.0,
+                             "side": "", "td_mode": ""}
+            try:
+                result = self.accountAPI.get_positions('SWAP',symbol)
+
+                pos = result['data'][0]
+                if abs(float(pos['pos'])) > 0:
+                    position_dict["symbol"] = symbol
+                    position_dict['position_amt'] = pos['pos']
+                    position_dict['entry_price'] = pos['avgPx']
+                    position_dict['current_price'] = pos['markPx']
+                    position_dict['side'] = "short" if float(pos['pos']) < 0 else "long"
+                    position_dict['td_mode'] = pos['mgnMode']
+                    position_info[symbol] = position_dict
+
+            except Exception as e:
+                print("okx，获取{}币种的仓位失败！！！".format(symbol))
+                print(e)
+
+        return position_info, symbols
 
 
     def get_history_trades(self,symbol):

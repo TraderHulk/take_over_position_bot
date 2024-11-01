@@ -7,8 +7,10 @@
     "profit_activate_1": 0.3,
     "profit_activate_2": 1,
     "profit_activate_3": 3,
-    "apiInfo": {"apiKey": "1e602d1f8-e5ef1bbcd5df",
-        "secretKey": "9420B89397505C848C",
-        "passphrase": "Hua@"},
-    "messageInfo": {"feishu": "015e65b46a869a4"}
+    "black_coin_list": [],
+    "symbols": [],
+    "apiInfo": {"apiKey": "1e61f8-e5ef1bbcd5df",
+        "secretKey": "942071DFA897505C848C",
+        "passphrase": "Hu"},
+    "messageInfo": {"feishu": "015e67d44-0c5b46a869a4"}
 }

@@ -53,6 +53,8 @@ class MultiAssetTradingBot(OkkSwap):
             self.profit_activate_2 = tmp_json['profit_activate_2']  # 利润第一档位阈值
             self.profit_activate_3 = tmp_json['profit_activate_3']  # 利润第二档位阈值
             self.profit_activate_1_pao = tmp_json['profit_activate_1_pao']
+            self.symbols = tmp_json['symbols'] #只监控币种的列表 如果没有写，默认就是全币种监控，好处就是可以节约一些时间
+            self.black_coin_list = tmp_json['black_coin_list'] #黑名单，加入后就不进行监控该币种的仓位了
             self.feishu_bot_id = tmp_json['messageInfo']['feishu']
 
     def generate_json_file(self):
@@ -74,14 +76,18 @@ class MultiAssetTradingBot(OkkSwap):
         else:
             return "无"
 
-    def check_position(self,profit_pct, highest_profit, tier, symbol, side, td_mode):
+    def check_position(self,runbet,profit_pct, highest_profits, tier, symbol, td_mode):
+
         """检查仓位"""
+        highest_profit = highest_profits[symbol]
         if tier == "低档保护止盈":
             logger.info(f"回撤到{self.profit_activate_1_pao}% 止盈")
             if profit_pct <= self.profit_activate_1_pao:
                 msg = f"{symbol} 触发低档保护止盈，当前盈亏回撤到: {profit_pct:.2f}%，执行平仓"
                 logger.info(msg)
                 self.set_pingall_order(symbol=symbol,mgnMode=td_mode)
+                highest_profits[symbol] = 0
+                runbet.modify_highest_profits(highest_profits=highest_profits)
                 return
 
         elif tier == "第一档移动止盈":
@@ -90,6 +96,8 @@ class MultiAssetTradingBot(OkkSwap):
             if profit_pct <= trail_stop_loss:
                 logger.info(f"{symbol} 达到利润回撤阈值，当前档位：第一档移动止盈，最高盈亏: {highest_profit:.2f}%，当前盈亏: {profit_pct:.2f}%，执行平仓")
                 self.set_pingall_order(symbol=symbol,mgnMode=td_mode)
+                highest_profits[symbol] = 0
+                runbet.modify_highest_profits(highest_profits=highest_profits)
                 return
 
         elif tier == "第二档移动止盈":
@@ -98,22 +106,42 @@ class MultiAssetTradingBot(OkkSwap):
             if profit_pct <= trail_stop_loss:
                 logger.info(f"{symbol} 达到利润回撤阈值，当前档位：第二档移动止盈，最高盈亏: {highest_profit:.2f}%，当前盈亏: {profit_pct:.2f}%，执行平仓")
                 self.set_pingall_order(symbol=symbol, mgnMode=td_mode)
+                highest_profits[symbol] = 0
+                runbet.modify_highest_profits(highest_profits=highest_profits)
                 return
 
         if profit_pct <= -self.stop_loss_pct * 100:
             logger.info(f"{symbol} 触发止损，当前盈亏: {profit_pct:.2f}%，执行平仓")
             self.set_pingall_order(symbol=symbol,mgnMode=td_mode)
+            runbet.modify_highest_profits(highest_profits=highest_profits)
+            highest_profits[symbol] = 0
+            runbet.modify_highest_profits(highest_profits=highest_profits)
+
 
 
 
     def monitor_positions(self,runbet):
         """监控仓位"""
 
+        if self.black_coin_list:
+            self.black_coin_list = [i.upper() + "-USDT-SWAP" for i in self.black_coin_list]
+
         #获取本地记录的监控的币种
         detected_positions = runbet.get_detected_positions()
+
         highest_profits = runbet.get_highest_profits()
-        #更新仓位
-        position_info,symbols = self.updatePosition()
+        if self.symbols == [] :
+            position_info, symbols = self.updatePosition()
+        else:
+            # 更新仓位
+            position_info, symbols = self.updatePosition_coins(coins=self.symbols)
+
+        symbols = [i for i in symbols if i not in self.black_coin_list] #去掉黑名单的仓位币种
+
+
+        if position_info == {}:
+            return
+
         #处理平仓与新增
         if symbols != detected_positions:
             #如果2个集合不一致，说明有平仓或者新增
@@ -145,25 +173,31 @@ class MultiAssetTradingBot(OkkSwap):
 
         highest_profits = runbet.get_highest_profits()
         #监控现有仓位币种的行情
-        for symbol,pos_info in position_info.items():
+        for symbol, pos_info in position_info.items():
+            if symbol in self.black_coin_list:
+                continue
             position_amt = pos_info['position_amt']
             current_price = float(pos_info['current_price'])
             entry_price = float(pos_info['entry_price'])
             side = pos_info['side']
             td_mode = pos_info['td_mode']
             if side == 'long':
-                profit_pct = (current_price - entry_price ) / entry_price * 100
+                profit_pct = (current_price - entry_price) / entry_price * 100
             elif side == 'short':
                 profit_pct = (entry_price - current_price) / entry_price * 100
-            else:continue
+            else:
+                continue
 
             if profit_pct > highest_profits[symbol]:
                 highest_profits[symbol] = profit_pct
                 runbet.modify_highest_profits(highest_profits=highest_profits)
 
             current_tier = self.get_tier(highest_profits[symbol])
-            logger.info(f"监控 {symbol}，仓位: {position_amt}，方向: {side}，开仓价格: {entry_price}，当前价格: {current_price}，浮动盈亏: {profit_pct:.2f}%，最高盈亏: {highest_profits[symbol]:.2f}%，当前档位: {current_tier}")
-            self.check_position(profit_pct, highest_profits[symbol], current_tier, symbol, side, td_mode)
+            logger.info(
+                f"监控 {symbol}，仓位: {position_amt}，方向: {side}，开仓价格: {entry_price}，当前价格: {current_price}，浮动盈亏: {profit_pct:.2f}%，最高盈亏: {highest_profits[symbol]:.2f}%，当前档位: {current_tier}")
+            self.check_position(runbet,profit_pct, highest_profits, current_tier, symbol, td_mode)
+
+
 
 
     def schedule_task(self):
