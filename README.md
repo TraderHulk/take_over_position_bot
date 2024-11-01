@@ -77,7 +77,7 @@ taif -f logs/info.log #查看日志，不想查看了就ctrl +c 取消即可
     "apiInfo": {"apiKey": "1e6021f8-e5ef1bbcd5df",
         "secretKey": "9420717505C848C",
         "passphrase": "H@"},
-    "messageInfo": {"feishu": "015e67df-04cb-47bc5b46a869a4"} #飞书群里的机器人的id,可以再设置里找到机器人的id，也就是链接后面的id
+    "messageInfo": {"feishu": "015e67df-0c5b46a869a4"} #飞书群里的机器人的id,可以再设置里找到机器人的id，也就是链接后面的id
 }
 ```
 ### 6、ToDo
