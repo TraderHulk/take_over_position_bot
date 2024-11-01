@@ -80,7 +80,7 @@ taif -f logs/info.log #查看日志，不想查看了就ctrl +c 取消即可
 
 ​	1、支持监控币种设置黑名单列表；
 ​	2、新增客户端，支持windows、mac用户；
-​	3、新增coinank.con网站的情绪花自动交易。
+​	3、新增coinank.con网站的情绪化自动交易。
 
 
 
