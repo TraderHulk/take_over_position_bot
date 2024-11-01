@@ -30,13 +30,27 @@ https://www.ucloud.cn/active/ulhost.html?invitation_code=C1x61A89E959B77
 
 ​		2)、下载安装anaconda（不会登陆linux系统服务器的可以百度一下，或者进群咨询😄）
 
+可以在网页上登陆服务器，就在你买服务的网页上找找登陆按钮。
+
+如果没有wget 命令 就先下载：
+
+```
+yum install wget
+```
+
+然后执行
+
 ```python
-wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-2021.05-Linux-x86_64.sh
+wget https://repo.anaconda.com/archive/Anaconda3-5.3.0-Linux-x86_64.sh
 ```
 
 ​		安装anaconda参考链接：https://blog.csdn.net/Lin1169404361/article/details/123288482
 
-​		
+安装成功后，输入python 出现python3.7就成功了。exit()退出来。
+
+这个时候需要上传take_over_position_bot（take_over_position_bot_master）文件夹到服务器了，windows用户推荐用x f t p上传，具体可以参考https://blog.csdn.net/m0_52985087/article/details/135645374
+
+
 
 ### 2、交易所设置
 
@@ -49,11 +63,13 @@ wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-2021.05-Lin
 启动脚本命令：
 
 ```python
-cd take_over_position_bot 
+cd take_over_position_bot 或者 cd take_over_position_bot_master
 source source_run.sh start  #启动服务
 source source_run.sh status  #查看启动状态，出现pid进程编号基本上启动成功啦
 source source_run.sh stop  #停止服务
 taif -f logs/info.log #查看日志，不想查看了就ctrl +c 取消即可
+
+后续本地修改参数param_a.json 文件里的配置参数，通过xftp上传到服务器上对应configs文件夹里，期间不需要停程序，程序会动态读取最新参数。
 ```
 
 ### 4、机器人内在原理
