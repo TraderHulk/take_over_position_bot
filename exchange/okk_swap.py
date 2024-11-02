@@ -229,9 +229,9 @@ class OkkSwap(object):
 if __name__=="__main__":
     flag = 'c'
     coins = ["IOTA", "ZIL"]
-    api_key = "1e602d7b-6665-434e-a1f8-e5ef1bbcd5df"
-    secret_key = "942071DFA8B7CD9F30B89397505C848C"
-    passphrase = "Huang1018@"
+    api_key = "1e60b-6665-434e-a1f8-e5ef1bbcd5df"
+    secret_key = "94071DFA8B7CD9F30B89397505C848C"
+    passphrase = "Hu"
     o = OkkSwap(api_key, secret_key, passphrase)
     for coin in coins:
         symbol = coin + "-USDT-SWAP"
