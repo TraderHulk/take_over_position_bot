@@ -141,8 +141,9 @@ class OkkSwap(object):
                     position_info[pos['instId']] = position_dict
                     symbols.append(pos['instId'])
         except Exception as e:
-            print("okx，获取{}币种的仓位失败！！！".format(symbol))
             print(e)
+            pass
+
 
         return position_info,symbols
 
@@ -168,8 +169,8 @@ class OkkSwap(object):
                     position_info[symbol] = position_dict
 
             except Exception as e:
-                print("okx，获取{}币种的仓位失败！！！".format(symbol))
-                print(e)
+                pass
+
 
         return position_info, symbols
 
@@ -183,55 +184,15 @@ class OkkSwap(object):
             print("获取历史订单")
 
 
-    def do_market(self,signal,symbol,qty):
-        """市场价进行交易"""
-        try:
-            position = self.updatePosition(symbol=symbol)
-            logging.info("okx_position:{}".format(position))
-            if signal == "long" and float(position)<=0:
-                # 平空单
-                if float(position) != 0:
-                    self.set_pingall_order(symbol=symbol)
-                self.set_order(symbol=symbol, qty=str(qty), side="buy")
-            elif signal == "short" and float(position)>=0:
-                # 平多单
-                if float(position) != 0:
-                    self.set_pingall_order(symbol=symbol)
 
-                self.set_order(symbol=symbol, qty=str(qty), side="sell")
-
-            elif signal == "long" and float(position)>0:
-                # 加多仓
-                self.set_order(symbol=symbol, qty=str(qty), side="buy")
-
-            elif signal == "short" and float(position) < 0:
-                # 加空仓
-                self.set_order(symbol=symbol, qty=str(qty), side="sell")
-
-            elif signal == "tp_long_batch" and float(position)>0:
-                #平多一份订单
-                self.set_order(symbol=symbol, qty=str(qty), side="sell",reduceOnly=True)
-
-            elif signal == "tp_short_batch" and float(position)<0:
-                #平空一份订单
-                self.set_order(symbol=symbol, qty=str(qty), side="buy",reduceOnly=True)
-
-            elif signal == "tp_long":
-                self.set_pingall_order(symbol=symbol)
-
-            elif signal == "tp_short":
-                self.set_pingall_order(symbol=symbol)
-
-        except Exception as e:
-            logging.error(msg='okk api出问题' + str(e))
 
 
 if __name__=="__main__":
     flag = 'c'
     coins = ["IOTA", "ZIL"]
-    api_key = "1e60b-6665-434e-a1f8-e5ef1bbcd5df"
-    secret_key = "94071DFA8B7CD9F30B89397505C848C"
-    passphrase = "Hu"
+    api_key = "1e61f8-e5ef1bbcd5df"
+    secret_key = "942071D397505C848C"
+    passphrase = "Huang"
     o = OkkSwap(api_key, secret_key, passphrase)
     for coin in coins:
         symbol = coin + "-USDT-SWAP"

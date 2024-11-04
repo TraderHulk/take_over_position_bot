@@ -53,8 +53,6 @@ class MultiAssetTradingBot(OkkSwap):
             self.profit_activate_2 = tmp_json['profit_activate_2']  # 利润第一档位阈值
             self.profit_activate_3 = tmp_json['profit_activate_3']  # 利润第二档位阈值
             self.profit_activate_1_pao = tmp_json['profit_activate_1_pao']
-            self.symbols = tmp_json['symbols'] #只监控币种的列表 如果没有写，默认就是全币种监控，好处就是可以节约一些时间
-            self.black_coin_list = tmp_json['black_coin_list'] #黑名单，加入后就不进行监控该币种的仓位了
             self.feishu_bot_id = tmp_json['messageInfo']['feishu']
 
     def generate_json_file(self):
@@ -123,24 +121,30 @@ class MultiAssetTradingBot(OkkSwap):
     def monitor_positions(self,runbet):
         """监控仓位"""
 
-        if self.black_coin_list:
-            self.black_coin_list = [i.upper() + "-USDT-SWAP" for i in self.black_coin_list]
-
         #获取本地记录的监控的币种
         detected_positions = runbet.get_detected_positions()
 
         highest_profits = runbet.get_highest_profits()
-        if self.symbols == [] :
-            position_info, symbols = self.updatePosition()
-        else:
-            # 更新仓位
-            position_info, symbols = self.updatePosition_coins(coins=self.symbols)
-
-        symbols = [i for i in symbols if i not in self.black_coin_list] #去掉黑名单的仓位币种
-
+        position_info, symbols = self.updatePosition()
 
         if position_info == {}:
+            if symbols == [] and detected_positions != []:
+                # 处理平仓
+                for symbol in detected_positions:
+                    ping_msg = "【平仓币种通知:】\n"
+                    ping_msg += f"{symbol}币种已经平仓！\n" + "{}".format(
+                        str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                    logger.info(ping_msg)
+                    self.feishu_bot.send_text(Text=ping_msg, bot_id=self.feishu_bot_id)
+
+                    highest_profits[symbol] = 0
+                    runbet.modify_highest_profits(highest_profits=highest_profits)
+                runbet.modify_detected_positions(detected_positions=symbols)
+
             return
+
+
+
 
         #处理平仓与新增
         if symbols != detected_positions:
@@ -152,6 +156,10 @@ class MultiAssetTradingBot(OkkSwap):
                     ping_msg += f"{symbol}币种已经平仓！\n" + "{}".format(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
                     logger.info(ping_msg)
                     self.feishu_bot.send_text(Text=ping_msg,bot_id=self.feishu_bot_id)
+
+
+
+
             #处理新增
             for symbol in symbols:
                 if symbol not in detected_positions:
@@ -174,8 +182,6 @@ class MultiAssetTradingBot(OkkSwap):
         highest_profits = runbet.get_highest_profits()
         #监控现有仓位币种的行情
         for symbol, pos_info in position_info.items():
-            if symbol in self.black_coin_list:
-                continue
             position_amt = pos_info['position_amt']
             current_price = float(pos_info['current_price'])
             entry_price = float(pos_info['entry_price'])
